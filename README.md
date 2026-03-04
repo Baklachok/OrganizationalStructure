@@ -1,0 +1,32 @@
+# Organizational Structure API
+
+FastAPI-проект для API организационной структуры.
+
+## Stack
+
+- FastAPI
+- SQLAlchemy 2.0
+- Alembic
+- PostgreSQL
+- pytest
+
+## Run With Docker
+
+1. Скопировать переменные окружения:
+```bash
+cp .env.example .env
+```
+
+2. Запустить API и PostgreSQL:
+```bash
+docker compose up --build
+```
+
+3. Проверить API:
+- `http://localhost:8000/docs`
+- `http://localhost:8000/departments/health`
+
+Остановить контейнеры:
+```bash
+docker compose down
+```
