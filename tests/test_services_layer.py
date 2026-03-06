@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import Generator
 from datetime import date
 
 import pytest
-from app.db.base import Base
 from app.models.department import Department
 from app.models.employee import Employee
 from app.schemas.department import DepartmentCreate, DepartmentUpdate
@@ -17,20 +15,8 @@ from app.services.departments import (
 )
 from app.services.employees import create_employee
 from fastapi import HTTPException
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import Session, sessionmaker
-
-
-@pytest.fixture()
-def db_session() -> Generator[Session, None, None]:
-    engine = create_engine("sqlite+pysqlite:///:memory:")
-    Base.metadata.create_all(bind=engine)
-    testing_session_local = sessionmaker(bind=engine, autocommit=False, autoflush=False)
-
-    with testing_session_local() as session:
-        yield session
-
-    Base.metadata.drop_all(bind=engine)
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 
 def test_create_department_and_employee(db_session: Session) -> None:

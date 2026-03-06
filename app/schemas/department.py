@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from app.schemas.employee import EmployeeRead
 
 
 class DepartmentBase(BaseModel):
@@ -42,3 +45,18 @@ class DepartmentDeleteQuery(BaseModel):
         if self.mode == "cascade" and self.reassign_to_department_id is not None:
             raise ValueError("reassign_to_department_id is only allowed when mode is 'reassign'")
         return self
+
+
+class DepartmentRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    parent_id: int | None
+    created_at: datetime
+
+
+class DepartmentTreeResponse(BaseModel):
+    department: DepartmentRead
+    employees: list[EmployeeRead]
+    children: list[DepartmentTreeResponse]
