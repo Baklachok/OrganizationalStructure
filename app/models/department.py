@@ -28,11 +28,13 @@ class Department(Base):
     parent_id: Mapped[int | None] = mapped_column(
         ForeignKey("departments.id", ondelete="CASCADE"),
         nullable=True,
+        index=True,
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
+        index=True,
     )
 
     parent: Mapped[Department | None] = relationship(

@@ -19,14 +19,16 @@ class Employee(Base):
     department_id: Mapped[int] = mapped_column(
         ForeignKey("departments.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
-    full_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    full_name: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
     position: Mapped[str] = mapped_column(String(200), nullable=False)
     hired_at: Mapped[date | None] = mapped_column(Date)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
+        index=True,
     )
 
     department: Mapped[Department] = relationship("Department", back_populates="employees")

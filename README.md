@@ -42,3 +42,20 @@ poetry install --extras dev
 ```bash
 poetry run mypy
 ```
+
+Линтинг:
+```bash
+poetry run ruff check .
+```
+
+## Migrations (Alembic)
+
+Применить миграции:
+```bash
+poetry run alembic upgrade head
+```
+
+Откатить все миграции:
+```bash
+poetry run alembic downgrade base
+```
