@@ -48,6 +48,11 @@ poetry run mypy
 poetry run ruff check .
 ```
 
+Покрытие тестов (coverage):
+```bash
+poetry run pytest --cov=app --cov-report=term-missing
+```
+
 ## Migrations (Alembic)
 
 Применить миграции:
