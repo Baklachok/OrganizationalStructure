@@ -14,7 +14,14 @@ if TYPE_CHECKING:
 
 class Department(Base):
     __tablename__ = "departments"
-    __table_args__ = (UniqueConstraint("parent_id", "name", name="uq_departments_parent_name"),)
+    __table_args__ = (
+        UniqueConstraint(
+            "parent_id",
+            "name",
+            name="uq_departments_parent_name",
+            postgresql_nulls_not_distinct=True,
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -32,10 +39,12 @@ class Department(Base):
         "Department",
         remote_side=[id],
         back_populates="children",
+        foreign_keys=[parent_id],
     )
     children: Mapped[list[Department]] = relationship(
         "Department",
         back_populates="parent",
+        foreign_keys=[parent_id],
         cascade="all, delete-orphan",
     )
     employees: Mapped[list[Employee]] = relationship(

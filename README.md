@@ -30,3 +30,15 @@ docker compose up --build
 ```bash
 docker compose down
 ```
+
+## Local Checks
+
+Установить dev-зависимости:
+```bash
+poetry install --extras dev
+```
+
+Проверка типизации:
+```bash
+poetry run mypy
+```
