@@ -22,8 +22,18 @@ cp .env.example .env
 docker compose up --build
 ```
 
+При старте контейнера API автоматически:
+- ждёт готовность PostgreSQL;
+- применяет миграции `alembic upgrade head`;
+- запускает Uvicorn.
+
 3. Проверить API:
 - `http://localhost:8000/docs`
+
+Проверить, что миграции применены:
+```bash
+docker compose exec app alembic current
+```
 
 Остановить контейнеры:
 ```bash
