@@ -7,6 +7,7 @@ from app.schemas.department import (
     DepartmentUpdate,
 )
 from app.schemas.employee import EmployeeCreate, EmployeeRead
+from app.schemas.error import ErrorDetail, ErrorResponse
 
 __all__ = [
     "DepartmentCreate",
@@ -15,6 +16,8 @@ __all__ = [
     "DepartmentRead",
     "DepartmentTreeResponse",
     "DepartmentUpdate",
+    "ErrorDetail",
+    "ErrorResponse",
     "EmployeeCreate",
     "EmployeeRead",
 ]

@@ -3,11 +3,12 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any, Literal
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.errors import api_error
 from app.models.department import Department
 from app.models.employee import Employee
 from app.schemas.department import DepartmentCreate, DepartmentUpdate
@@ -16,7 +17,11 @@ from app.schemas.department import DepartmentCreate, DepartmentUpdate
 def _get_department_or_404(db: Session, department_id: int) -> Department:
     department = db.get(Department, department_id)
     if department is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Department not found")
+        raise api_error(
+            status.HTTP_404_NOT_FOUND,
+            "department_not_found",
+            "Department not found",
+        )
     return department
 
 
@@ -24,15 +29,17 @@ def _ensure_not_descendant(db: Session, department_id: int, new_parent_id: int) 
     current_id: int | None = new_parent_id
     while current_id is not None:
         if current_id == department_id:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Cannot create a cycle in department tree",
+            raise api_error(
+                status.HTTP_409_CONFLICT,
+                "department_tree_cycle",
+                "Cannot create a cycle in department tree",
             )
         current_department = db.get(Department, current_id)
         if current_department is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Department not found",
+            raise api_error(
+                status.HTTP_404_NOT_FOUND,
+                "department_not_found",
+                "Department not found",
             )
         current_id = current_department.parent_id
 
@@ -67,9 +74,10 @@ def create_department(db: Session, payload: DepartmentCreate) -> Department:
         db.commit()
     except IntegrityError as exc:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Department with same name already exists for this parent",
+        raise api_error(
+            status.HTTP_409_CONFLICT,
+            "department_name_conflict",
+            "Department with same name already exists for this parent",
         ) from exc
 
     db.refresh(department)
@@ -83,9 +91,10 @@ def update_department(db: Session, department_id: int, payload: DepartmentUpdate
     if "parent_id" in update_data:
         new_parent_id = update_data["parent_id"]
         if new_parent_id == department_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Department cannot be parent of itself",
+            raise api_error(
+                status.HTTP_400_BAD_REQUEST,
+                "department_self_parent",
+                "Department cannot be parent of itself",
             )
         if new_parent_id is not None:
             _get_department_or_404(db, new_parent_id)
@@ -99,9 +108,10 @@ def update_department(db: Session, department_id: int, payload: DepartmentUpdate
         db.commit()
     except IntegrityError as exc:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Department with same name already exists for this parent",
+        raise api_error(
+            status.HTTP_409_CONFLICT,
+            "department_name_conflict",
+            "Department with same name already exists for this parent",
         ) from exc
 
     db.refresh(department)
@@ -116,7 +126,11 @@ def get_department_tree(
     include_employees: bool = True,
 ) -> dict[str, Any]:
     if depth < 1:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Depth must be >= 1")
+        raise api_error(
+            status.HTTP_400_BAD_REQUEST,
+            "invalid_depth",
+            "Depth must be >= 1",
+        )
 
     root = _get_department_or_404(db, department_id)
     departments_by_id: dict[int, Department] = {root.id: root}
@@ -175,24 +189,31 @@ def delete_department(
     department = _get_department_or_404(db, department_id)
 
     if mode not in {"cascade", "reassign"}:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid deletion mode")
+        raise api_error(
+            status.HTTP_400_BAD_REQUEST,
+            "invalid_deletion_mode",
+            "Invalid deletion mode",
+        )
 
     if mode == "cascade" and reassign_to_department_id is not None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="reassign_to_department_id is only allowed for reassign mode",
+        raise api_error(
+            status.HTTP_400_BAD_REQUEST,
+            "invalid_reassign_target",
+            "reassign_to_department_id is only allowed for reassign mode",
         )
 
     if mode == "reassign":
         if reassign_to_department_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="reassign_to_department_id is required for reassign mode",
+            raise api_error(
+                status.HTTP_400_BAD_REQUEST,
+                "reassign_target_required",
+                "reassign_to_department_id is required for reassign mode",
             )
         if reassign_to_department_id == department_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot reassign employees to the department being deleted",
+            raise api_error(
+                status.HTTP_400_BAD_REQUEST,
+                "reassign_target_invalid",
+                "Cannot reassign employees to the department being deleted",
             )
 
         _get_department_or_404(db, reassign_to_department_id)
@@ -209,7 +230,8 @@ def delete_department(
         db.commit()
     except IntegrityError as exc:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Failed to delete department due to data conflict",
+        raise api_error(
+            status.HTTP_409_CONFLICT,
+            "department_delete_conflict",
+            "Failed to delete department due to data conflict",
         ) from exc

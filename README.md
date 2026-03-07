@@ -24,7 +24,6 @@ docker compose up --build
 
 3. Проверить API:
 - `http://localhost:8000/docs`
-- `http://localhost:8000/departments/health`
 
 Остановить контейнеры:
 ```bash
